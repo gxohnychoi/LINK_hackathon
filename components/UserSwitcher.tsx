@@ -4,7 +4,7 @@ import { USERS, type UserId } from '@/lib/types';
 export default function UserSwitcher({ current }: { current: UserId }) {
   return (
     <select
-      className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm"
+      className="rounded-xl bg-sand px-3 py-1.5 text-sm font-semibold text-ink focus:outline-none"
       value={current}
       onChange={(e) => {
         document.cookie = `demoUser=${e.target.value}; path=/; max-age=86400`;

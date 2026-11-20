@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+@theme {
+  --color-ink: #1b1b1b;
+  --color-ink-soft: #3a352c;
+  --color-gold: #d4b46f;
+  --color-gold-deep: #9a7633;
+  --color-sand: #f4f0e9;
+  --color-chip: #ebe2d3;
+  --color-chip-ink: #7a5a20;
+}
+
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
 }
