@@ -1,15 +1,17 @@
 @import "tailwindcss";
 
-/* 디자인 토큰 (design/ PNG 톤) */
+/* 디자인 토큰 (최종 색상) */
 @theme {
-  --color-ink: #1a1a1a;       /* 메인 다크: 강조 카드, 메인 버튼, 본문 */
-  --color-gold: #c9a96e;      /* 골드 포인트: 다크 위 숫자, 버튼 글자, 아이콘 */
-  --color-sand: #f4f1ea;      /* 베이지: 일반 카드, 입력칸 */
-  --color-chip: #eae2d3;      /* 태그 배경 */
-  --color-chip-ink: #8a6a2e;  /* 태그 글자, 자물쇠 아이콘 */
-  --color-muted: #8c8c8c;     /* 보조 글자 */
-  --color-line: #e5e5e5;      /* 구분선 */
-  --color-splash: #1c1c18;
+  --color-ink: #191915;        /* 메인 다크: 강조 카드, 메인 버튼 배경, 본문 글자 */
+  --color-gold: #d6c8b2;       /* 골드 강조: 다크 위 큰 숫자, 버튼 글자 */
+  --color-gold-point: #b2a48f; /* 골드 포인트: 아이콘, 진행 바, 타임라인 점 */
+  --color-badge: #393322;      /* 다크 카드 안의 배지 배경 */
+  --color-sand: #e5dfd3;       /* 베이지: 일반 카드, 입력칸 */
+  --color-chip: #e5dfd3;       /* 태그 배경 (베이지와 동일) */
+  --color-chip-ink: #a0927c;   /* 태그 글자, 자물쇠 아이콘 */
+  --color-muted: #8a8883;      /* 보조 글자 */
+  --color-line: #e5e5e5;       /* 구분선 */
+  --color-splash: #201f17;     /* 스플래시 배경 */
   --color-splash-badge: #24231e;
 
   --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
@@ -20,6 +22,11 @@
     to { opacity: 1; transform: none; }
   }
 }
+
+/* 골드 포인트: 아이콘(lucide)과 타임라인 점은 강조색보다 한 톤 낮게 */
+svg.lucide.text-gold { color: var(--color-gold-point); }
+svg.lucide.fill-gold { fill: var(--color-gold-point); }
+span.rounded-full.bg-gold { background-color: var(--color-gold-point); }
 
 body {
   background: #ffffff;
