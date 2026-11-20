@@ -24,7 +24,7 @@ export default function DelegatePage({ params }: { params: Promise<{ id: string 
       <h1 className="text-xl font-bold">대표에게 증거 위임하기</h1>
       <p className="rounded-xl bg-indigo-50 p-3 text-sm text-indigo-800">
         봉인된 내 증거가 대표 피해자에게 전달돼요. 대표가 피해자 전원의 증거를 묶어 경찰서에 제출합니다.
-        <br />이름은 대표에게만 보여요.
+        <br /><b>⚠️ 대표가 내 이름과 증거를 보게 됩니다.</b> 다른 피해자에게는 보이지 않아요.
       </p>
       <label className="block text-sm text-slate-500">이름
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder="홍길동"

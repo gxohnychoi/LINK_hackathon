@@ -55,6 +55,9 @@ export default function BundlePage({ params }: { params: Promise<{ id: string }>
 
   return (
     <div className="space-y-6">
+      <p className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm font-bold text-amber-800">
+        ⚠️ 이 앱은 착수금이나 수수료를 절대 요구하지 않습니다. 돈을 요구하는 대표·업체는 2차 사기예요.
+      </p>
       <section className="rounded-3xl bg-slate-900 p-5 text-white shadow-lg">
         <p className="text-sm text-slate-300">📦 사건 요약 · 대표 전용</p>
         {canShowTotal(s.delegatedCount) && s.totalAmount !== null ? (
