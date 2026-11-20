@@ -7,7 +7,7 @@ import { CLUE_LABEL, type ClueType } from '@/lib/types';
 const PLACEHOLDER: Record<ClueType, string> = {
   account: '110-123-456789', phone: '010-1234-5678', nick: '아이패드팝니다', kakao: 'seller123', url: 'https://example.com/pay',
 };
-const input = 'w-full rounded-xl border border-slate-300 px-3 py-2.5 text-base focus:border-indigo-500 focus:outline-none';
+const input = 'w-full min-w-0 rounded-xl border border-slate-300 px-3 py-2.5 text-base focus:border-indigo-500 focus:outline-none';
 
 export default function NewReport() {
   const router = useRouter();

@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🔗 연결고리 (LINK)
 
-## Getting Started
+> 흩어진 소액 사기 피해를 하나의 고액 사기 사건으로 묶는다.
+> "혼자 신고하면 45만 원, 묶으면 2,000만 원짜리 사건입니다."
 
-First, run the development server:
+같은 사기범에게 당한 중고거래 사기 피해자들을 **신원을 드러내지 않고 찾아 모으고**, 피해자들의 **봉인된 증거를 대표 피해자 한 명에게 모아주는** 모바일 웹 서비스입니다. 서버는 사기범 단서(계좌번호 등)의 원래 값을 알 수 없습니다.
+
+## 실행 방법
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local   # NEXT_PUBLIC_CLUE_PEPPER=link-demo-pepper-2026 처럼 값 입력
+npm run dev                  # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- DB 없음: 서버 메모리에 저장하고, 서버를 재시작하면 시드 데이터(피해자 A~D)가 다시 만들어집니다.
+- 로그인 없음: 상단 드롭다운으로 데모 유저 A/B/C/D를 전환합니다(쿠키).
+- 모바일 화면 폭 390px을 기준으로 만들었습니다.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 데모 시나리오
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. `/debug`: 서버 저장소에서 `110123456789`를 검색하면 **0건**입니다. 단서는 해시로만 저장됩니다.
+2. 유저 A의 홈에서는 A·B·C가 한 그룹으로 묶여 **합산 135만 원**이 나옵니다. 유저 D는 `매칭 대기 중`입니다.
+   - A `110-123-456789` ↔ B `110123456789` (하이픈 차이)
+   - B `https://safe-pay-check.com/order` ↔ C `www.safe-pay-check.com` (프로토콜·www·경로 차이)
+3. A가 `제가 대표할게요`를 누른 뒤 B와 C로 전환해 각각 `대표 승인하기`를 누릅니다. 그러면 `대표 확정`이 됩니다.
+4. B와 C가 `증거 위임하기`에서 이름을 입력하고 동의합니다.
+5. A로 전환해 `증거 묶음 보기`를 엽니다. 사건 요약, 타임라인, 피해자별 증거가 보이고 모든 증거가 `변경 없음 ✓`입니다.
+   - B가 같은 주소(`/api/groups/:id/bundle`)를 요청하면 **403**이 반환됩니다.
 
-## Learn More
+## 동작 원리
 
-To learn more about Next.js, take a look at the following resources:
+| 단계 | 내용 |
+|---|---|
+| 단서 정규화 | 계좌·전화는 숫자만 남기고(`+82`는 `0`으로), 닉네임·카톡 ID는 소문자로 바꾸고 공백을 없앱니다. URL은 도메인만 남깁니다. |
+| 해시 | 브라우저에서 `HMAC-SHA256(pepper, "type:value")`를 계산하고 해시값만 서버로 보냅니다. |
+| 그룹화 | 서버는 해시가 하나라도 겹치는 피해 건을 Union-Find로 묶습니다(등록할 때마다 전체를 다시 계산). |
+| 익명성 | API 응답에는 다른 피해자의 금액·단서·이름이 들어가지 않고, `피해자 A · 11월 3일` 같은 카드만 보입니다. 대표 화면의 위임자 이름만 예외입니다. |
+| 봉인 | 업로드할 때 브라우저가 파일의 SHA-256을 계산하고, 서버가 해시와 시각을 기록합니다. 대표 화면에서 해시를 다시 계산해 비교합니다. |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 알려진 한계
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **HMAC 키가 클라이언트에 있습니다** (`NEXT_PUBLIC_CLUE_PEPPER`). 번들에서 키를 꺼낼 수 있으므로, 키를 아는 사람은 계좌번호 후보를 대입해 해시를 역추적할 수 있습니다. 실서비스에서는 키를 서버가 보관하는 **서버 보조 블라인드 해시(OPRF)**로 바꿔야 합니다.
+- 증거 파일은 데모용으로 서버 메모리에 원본 그대로 저장됩니다. 실서비스에서는 대표의 공개키로 암호화해 전달해야 합니다.
+- 봉인 해시는 업로드한 사람이 계산해 보낸 값입니다. 업로드 이후의 변조는 잡아내지만, 업로드 전에 조작된 파일까지 막지는 못합니다.
+- 로그인·본인인증, DB, 경찰 제출 연동, 알림, 악용 대응은 범위 밖입니다.
 
-## Deploy on Vercel
+## 기술 스택
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Next.js 15 (App Router) · TypeScript · Tailwind CSS v4 · Web Crypto API

@@ -78,7 +78,7 @@ export default function EvidencePage({ params }: { params: Promise<{ id: string 
             <div className="relative">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={e.dataUrl} alt={e.fileName} className="aspect-[6/5] w-full bg-slate-50 object-cover" />
-              <div className="absolute bottom-1 left-1"><SealBadge sealedAt={e.sealedAt} /></div>
+              <div className="absolute bottom-1 left-1 right-1"><SealBadge sealedAt={e.sealedAt} /></div>
             </div>
             <div className="p-2">
               <p className="text-sm font-semibold">{EVIDENCE_LABEL[e.kind]}</p>

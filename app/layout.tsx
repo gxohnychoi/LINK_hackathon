@@ -21,6 +21,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <UserSwitcher current={user} />
           </header>
           <main className="px-4 py-5">{children}</main>
+          <footer className="px-4 pb-6 text-center text-xs text-slate-400">
+            <Link href="/debug" className="underline">서버 저장소 보기 (데모)</Link>
+          </footer>
         </div>
       </body>
     </html>
