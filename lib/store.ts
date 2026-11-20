@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { makeClueHash, sealEvidence } from './crypto';
+import { sealEvidence } from './crypto';
+import { makeClueHashServer } from './clue-hash.server';
 import { recomputeGroups } from './groups';
 import type { Store, Case, ClueType, EvidenceKind, UserId } from './types';
 
@@ -35,7 +36,7 @@ async function seed(): Promise<Store> {
     const c: Case = { id: newId('c'), userId: row.userId, platform: row.platform, itemName: row.itemName, amount: row.amount, sentAt: row.sentAt };
     s.cases.push(c);
     for (const [type, raw] of row.clues) {
-      const hmac = await makeClueHash(type, raw); // 시드도 화면과 같은 함수로 해시 (원문 미보관)
+      const hmac = makeClueHashServer(type, raw); // 시드도 화면과 같은 함수로 해시 (원문 미보관)
       if (hmac) s.clues.push({ caseId: c.id, type, hmac });
     }
     for (const [kind, file] of row.evidence) {

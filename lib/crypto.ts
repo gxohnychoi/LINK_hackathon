@@ -1,30 +1,25 @@
 import { normalizeClue } from './normalize';
 import type { ClueType } from './types';
 
-const enc = new TextEncoder();
 const hex = (buf: ArrayBuffer) => Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('');
 const sha256OfBlob = async (file: Blob) => hex(await crypto.subtle.digest('SHA-256', await file.arrayBuffer()));
 
 /*
- * HMAC 키(pepper)
+ * 단서 해시 (HMAC-SHA256)
  * 일반 SHA-256은 계좌·전화번호처럼 경우의 수가 적은 값을 전부 대입하면 원문이 복원된다.
- * 비밀키가 있어야 계산되는 HMAC을 써서, DB만 유출돼서는 원문을 역추적할 수 없게 한다.
- * [알려진 한계] 데모는 브라우저에서 계산하므로 키가 클라이언트 번들에 노출된다.
- *  → 실서비스: OPRF(서버가 키를 쥐되 원문은 못 보는 방식) 또는 PSI로 전환.
+ * 비밀키가 있어야 계산되는 HMAC을 쓰고, 그 키는 서버에만 둔다(lib/clue-hash.server.ts).
+ * 브라우저는 /api/clue-hash 에 요청해 해시만 받고, 서버는 원문을 저장하지 않는다.
+ * [남은 한계] 원문이 서버를 한 번 지나간다 → 실서비스: OPRF로 서버도 원문을 못 보게.
  */
-let keyPromise: Promise<CryptoKey> | null = null;
-function getKey() {
-  const pepper = process.env.NEXT_PUBLIC_CLUE_PEPPER;
-  if (!pepper) throw new Error('NEXT_PUBLIC_CLUE_PEPPER 가 설정되지 않았습니다 (.env.local)');
-  keyPromise ??= crypto.subtle.importKey('raw', enc.encode(pepper), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-  return keyPromise;
-}
-
-/** 정규화 → HMAC-SHA256(`type:value`). 타입을 붙여 계좌/전화처럼 숫자가 같아도 섞이지 않게 함. 비면 빈 문자열 */
 export async function makeClueHash(type: ClueType, raw: string): Promise<string> {
-  const n = normalizeClue(type, raw);
-  if (!n) return '';
-  return hex(await crypto.subtle.sign('HMAC', await getKey(), enc.encode(`${type}:${n}`)));
+  if (!normalizeClue(type, raw)) return '';
+  const r = await fetch('/api/clue-hash', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type, raw }),
+  });
+  if (!r.ok) throw new Error('단서 해시 계산에 실패했어요');
+  return (await r.json()).hmac as string;
 }
 
 /** 증거 봉인: 등록 순간의 파일 지문(SHA-256) + 시각 */
