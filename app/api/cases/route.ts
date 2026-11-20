@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: '피해 정보를 모두 입력해주세요' }, { status: 400 });
   }
   const clues: { type: ClueType; hmac: string }[] = (Array.isArray(b.clues) ? b.clues : []).filter(
-    (c: { type: ClueType; hmac: string }) => CLUE_TYPES.includes(c?.type) && /^[0-9a-f]{64}$/.test(c?.hmac),
+    (c: { type: ClueType; hmac: string }) => CLUE_TYPES.includes(c?.type) && typeof c?.hmac === 'string' && c.hmac.length > 0 && c.hmac.length <= 256,
   );
   if (!clues.length) return NextResponse.json({ error: '단서를 하나 이상 입력해주세요' }, { status: 400 });
 

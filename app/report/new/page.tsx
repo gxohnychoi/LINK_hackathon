@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { hmacClue } from '@/lib/clue';
+import { makeClueHash } from '@/lib/crypto';
 import { CLUE_LABEL, type ClueType } from '@/lib/types';
 
 const PLACEHOLDER: Record<ClueType, string> = {
@@ -23,8 +23,10 @@ export default function NewReport() {
     try {
       // 브라우저에서 정규화 + HMAC → 해시값만 서버로
       const hashed = (await Promise.all(
-        (Object.keys(clues) as ClueType[]).map(async (type) => ({ type, hmac: await hmacClue(type, clues[type]) })),
-      )).filter((c): c is { type: ClueType; hmac: string } => !!c.hmac);
+        (Object.keys(clues) as ClueType[])
+          .filter((type) => clues[type].trim())
+          .map(async (type) => ({ type, hmac: await makeClueHash(type, clues[type]) })),
+      )).filter((c) => c.hmac);
       const r = await fetch('/api/cases', {
         method: 'POST', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ ...f, amount: Number(f.amount.replace(/\D/g, '')), clues: hashed }),

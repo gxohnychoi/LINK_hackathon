@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs';
-import { createHash } from 'node:crypto';
 import path from 'node:path';
-import { hmacClue } from './clue';
+import { makeClueHash, sealEvidence } from './crypto';
 import { recomputeGroups } from './groups';
 import type { Store, Case, ClueType, EvidenceKind, UserId } from './types';
 
@@ -36,7 +35,7 @@ async function seed(): Promise<Store> {
     const c: Case = { id: newId('c'), userId: row.userId, platform: row.platform, itemName: row.itemName, amount: row.amount, sentAt: row.sentAt };
     s.cases.push(c);
     for (const [type, raw] of row.clues) {
-      const hmac = await hmacClue(type, raw); // 시드도 정규화 + HMAC 거쳐 저장 (원문 미보관)
+      const hmac = await makeClueHash(type, raw); // 시드도 화면과 같은 함수로 해시 (원문 미보관)
       if (hmac) s.clues.push({ caseId: c.id, type, hmac });
     }
     for (const [kind, file] of row.evidence) {
@@ -44,7 +43,7 @@ async function seed(): Promise<Store> {
       s.evidence.push({
         id: newId('e'), caseId: c.id, kind, fileName: file,
         dataUrl: `data:image/svg+xml;base64,${bytes.toString('base64')}`,
-        sha256: createHash('sha256').update(bytes).digest('hex'),
+        sha256: (await sealEvidence(new Blob([new Uint8Array(bytes)]))).sha256,
         sealedAt: new Date(`${row.sentAt}T21:00:00+09:00`).toISOString(),
       });
     }

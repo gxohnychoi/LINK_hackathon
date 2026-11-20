@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { membership } from '@/lib/access';
 import { sharedClueCounts } from '@/lib/groups';
+import { canShowTotal } from '@/lib/crypto';
 
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
   const m = await membership((await params).id);
@@ -12,7 +13,8 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
   return NextResponse.json({
     id: g.id,
     size: members.length,
-    totalAmount: members.reduce((a, c) => a + c.amount, 0),
+    // 3명 미만이면 합산액도 숨김 (내 금액을 빼면 상대 금액이 드러남)
+    totalAmount: canShowTotal(members.length) ? members.reduce((a, c) => a + c.amount, 0) : null,
     sharedClues: sharedClueCounts(s, g),
     status: g.status,
     repAlias: rep?.alias ?? null,

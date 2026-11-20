@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { membership } from '@/lib/access';
 import { sharedClueCounts } from '@/lib/groups';
+import { canShowTotal } from '@/lib/crypto';
 
 // 대표 전용: 사건 요약 + 위임자별 증거 + 봉인 해시
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -29,7 +30,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
     summary: {
       delegatedCount: included.length,
       groupSize: g.caseIds.length,
-      totalAmount: included.reduce((a, c) => a + c.amount, 0),
+      totalAmount: canShowTotal(included.length) ? included.reduce((a, c) => a + c.amount, 0) : null,
       sharedClues: sharedClueCounts(s, g),
       timeline: [...victims].sort((a, b) => a.sentAt.localeCompare(b.sentAt))
         .map(({ alias, name, sentAt, platform, itemName }) => ({ alias, name, sentAt, platform, itemName })),

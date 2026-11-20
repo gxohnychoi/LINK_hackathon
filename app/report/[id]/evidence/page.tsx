@@ -2,7 +2,7 @@
 import { use, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import SealBadge from '@/components/SealBadge';
-import { sha256Hex } from '@/lib/clue';
+import { sealEvidence } from '@/lib/crypto';
 import { EVIDENCE_LABEL, type Evidence, type EvidenceKind } from '@/lib/types';
 
 const readDataUrl = (f: File) => new Promise<string>((res, rej) => {
@@ -31,8 +31,8 @@ export default function EvidencePage({ params }: { params: Promise<{ id: string 
     if (file.size > 5 * 1024 * 1024) return alert('5MB 이하 이미지만 올릴 수 있어요');
     setBusy(true);
     try {
-      // 봉인: 브라우저에서 원본 파일 SHA-256 계산
-      const sha256 = await sha256Hex(await file.arrayBuffer());
+      // 봉인: 브라우저에서 원본 파일 해시 계산 (봉인 시각은 서버 기록 기준)
+      const { sha256 } = await sealEvidence(file);
       const dataUrl = await readDataUrl(file);
       const r = await fetch(`/api/cases/${id}/evidence`, {
         method: 'POST', headers: { 'content-type': 'application/json' },

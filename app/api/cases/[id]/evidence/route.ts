@@ -27,7 +27,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const { s, c } = await ownCase((await params).id);
   if (!c) return NextResponse.json({ error: '내 피해 건이 아니에요' }, { status: 403 });
   const b = await req.json().catch(() => null);
-  if (!KINDS.includes(b?.kind) || typeof b?.dataUrl !== 'string' || !b.dataUrl.startsWith('data:image/') || !/^[0-9a-f]{64}$/.test(b?.sha256)) {
+  if (!KINDS.includes(b?.kind) || typeof b?.dataUrl !== 'string' || !b.dataUrl.startsWith('data:image/') || typeof b?.sha256 !== 'string' || !b.sha256 || b.sha256.length > 256) {
     return NextResponse.json({ error: '잘못된 증거 형식이에요' }, { status: 400 });
   }
   if (b.dataUrl.length > 8_000_000) return NextResponse.json({ error: '파일이 너무 커요 (최대 약 5MB)' }, { status: 413 });

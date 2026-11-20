@@ -2,10 +2,11 @@
 import { use, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { won, kDate } from '@/lib/format';
+import { canShowTotal } from '@/lib/crypto';
 import { CLUE_LABEL, type ClueType } from '@/lib/types';
 
 type GroupView = {
-  id: string; size: number; totalAmount: number; sharedClues: Partial<Record<ClueType, number>>;
+  id: string; size: number; totalAmount: number | null; sharedClues: Partial<Record<ClueType, number>>;
   status: 'open' | 'rep_pending' | 'rep_confirmed'; repAlias: string | null;
   me: { caseId: string; alias: string; isRep: boolean; approved: boolean; delegated: boolean };
   approvedCount: number; approvalNeeded: number;
@@ -47,8 +48,17 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
     <div className="space-y-5">
       <section className="rounded-3xl bg-gradient-to-br from-indigo-600 to-violet-600 p-5 text-white shadow-lg">
         <p className="text-sm opacity-80">같은 사기범에게 당한 피해자 {g.size}명</p>
-        <p className="mt-1 text-4xl font-black tracking-tight">{won(g.totalAmount)}</p>
-        <p className="mt-1 text-sm opacity-80">합산 피해액 · 혼자가 아니에요</p>
+        {canShowTotal(g.size) && g.totalAmount !== null ? (
+          <>
+            <p className="mt-1 text-4xl font-black tracking-tight">{won(g.totalAmount)}</p>
+            <p className="mt-1 text-sm opacity-80">합산 피해액 · 혼자가 아니에요</p>
+          </>
+        ) : (
+          <>
+            <p className="mt-2 text-2xl font-black">🔒 3명 이상 모이면 공개돼요</p>
+            <p className="mt-1 text-sm opacity-80">합산 피해액 · 혼자가 아니에요</p>
+          </>
+        )}
         <div className="mt-4 flex flex-wrap gap-2">
           {(Object.entries(g.sharedClues) as [ClueType, number][]).map(([t, n]) => (
             <span key={t} className="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold">겹친 {CLUE_LABEL[t]} {n}개</span>
