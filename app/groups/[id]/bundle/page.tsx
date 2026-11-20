@@ -60,6 +60,10 @@ export default function BundlePage({ params }: { params: Promise<{ id: string }>
     <div>
       <PageHeader />
 
+      <p className="mt-4 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm font-bold text-amber-900">
+        ⚠️ 이 앱은 착수금이나 수수료를 절대 요구하지 않습니다. 돈을 요구하는 대표·업체는 2차 사기예요.
+      </p>
+
       <section className={`${ui.darkCard} mt-6`}>
         <p className="flex items-center gap-1.5 text-sm text-white"><Package className="h-4 w-4 text-gold" /> 사건 요약 · 대표 전용</p>
         {canShowTotal(s.delegatedCount) && s.totalAmount !== null ? (

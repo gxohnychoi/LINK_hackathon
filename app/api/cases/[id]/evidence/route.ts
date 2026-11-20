@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { createHash } from 'node:crypto';
+import { encryptEvidence, decryptEvidence } from '@/lib/evidence-crypto.server';
 import { db, newId } from '@/lib/store';
 import { currentUser } from '@/lib/user';
 import type { EvidenceKind } from '@/lib/types';
@@ -18,11 +20,12 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
   if (!c) return NextResponse.json({ error: '내 피해 건이 아니에요' }, { status: 403 });
   return NextResponse.json({
     case: { id: c.id, itemName: c.itemName, groupId: c.groupId ?? null },
-    evidence: s.evidence.filter((e) => e.caseId === c.id),
+    // 저장은 암호문, 본인에게만 복호화해서 보여줌
+    evidence: s.evidence.filter((e) => e.caseId === c.id).map((e) => ({ ...e, dataUrl: decryptEvidence(e.dataUrl) })),
   });
 }
 
-// 증거 업로드 = 봉인: 브라우저에서 계산한 SHA-256과 서버 시각을 기록
+// 증거 업로드 = 봉인: 서버가 받은 파일로 SHA-256을 다시 계산해 브라우저 값과 대조한 뒤, 서버 시각과 함께 기록
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { s, c } = await ownCase((await params).id);
   if (!c) return NextResponse.json({ error: '내 피해 건이 아니에요' }, { status: 403 });
@@ -31,9 +34,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: '잘못된 증거 형식이에요' }, { status: 400 });
   }
   if (b.dataUrl.length > 8_000_000) return NextResponse.json({ error: '파일이 너무 커요 (최대 약 5MB)' }, { status: 413 });
+  // 봉인 지문은 서버가 직접 계산 (클라이언트가 보낸 해시를 그대로 믿지 않음)
+  const bytes = Buffer.from(b.dataUrl.slice(b.dataUrl.indexOf(',') + 1), 'base64');
+  const serverSha = createHash('sha256').update(bytes).digest('hex');
+  if (serverSha !== String(b.sha256).toLowerCase()) {
+    return NextResponse.json({ error: '전송 중 파일이 바뀌었어요 (봉인 지문 불일치)' }, { status: 400 });
+  }
   const ev = {
     id: newId('e'), caseId: c.id, kind: b.kind as EvidenceKind, fileName: String(b.fileName ?? 'evidence'),
-    dataUrl: b.dataUrl, sha256: b.sha256, sealedAt: new Date().toISOString(),
+    dataUrl: encryptEvidence(b.dataUrl) /* 서버에는 AES-GCM 암호문으로 저장 */, sha256: serverSha, sealedAt: new Date().toISOString(),
   };
   s.evidence.push(ev);
   return NextResponse.json({ id: ev.id, sealedAt: ev.sealedAt });
