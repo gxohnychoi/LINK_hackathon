@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createHash } from 'node:crypto';
+import { encryptEvidence, decryptEvidence } from '@/lib/evidence-crypto.server';
 import { db, newId } from '@/lib/store';
 import { currentUser } from '@/lib/user';
 import type { EvidenceKind } from '@/lib/types';
@@ -19,7 +20,8 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
   if (!c) return NextResponse.json({ error: '내 피해 건이 아니에요' }, { status: 403 });
   return NextResponse.json({
     case: { id: c.id, itemName: c.itemName, groupId: c.groupId ?? null },
-    evidence: s.evidence.filter((e) => e.caseId === c.id),
+    // 저장은 암호문, 본인에게만 복호화해서 보여줌
+    evidence: s.evidence.filter((e) => e.caseId === c.id).map((e) => ({ ...e, dataUrl: decryptEvidence(e.dataUrl) })),
   });
 }
 
@@ -40,7 +42,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   }
   const ev = {
     id: newId('e'), caseId: c.id, kind: b.kind as EvidenceKind, fileName: String(b.fileName ?? 'evidence'),
-    dataUrl: b.dataUrl, sha256: serverSha, sealedAt: new Date().toISOString(),
+    dataUrl: encryptEvidence(b.dataUrl) /* 서버에는 AES-GCM 암호문으로 저장 */, sha256: serverSha, sealedAt: new Date().toISOString(),
   };
   s.evidence.push(ev);
   return NextResponse.json({ id: ev.id, sealedAt: ev.sealedAt });

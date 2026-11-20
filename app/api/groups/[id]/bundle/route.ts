@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { membership } from '@/lib/access';
 import { sharedClueCounts } from '@/lib/groups';
 import { canShowTotal } from '@/lib/crypto';
+import { decryptEvidence } from '@/lib/evidence-crypto.server';
 
 // 대표 전용: 사건 요약 + 위임자별 증거 + 봉인 해시
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -23,7 +24,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
     delegatedAt: g.delegations[c.id]?.at ?? null,
     sentAt: c.sentAt, platform: c.platform, itemName: c.itemName,
     evidence: s.evidence.filter((e) => e.caseId === c.id)
-      .map(({ id, kind, fileName, dataUrl, sha256, sealedAt }) => ({ id, kind, fileName, dataUrl, sha256, sealedAt })),
+      .map(({ id, kind, fileName, dataUrl, sha256, sealedAt }) => ({ id, kind, fileName, dataUrl: decryptEvidence(dataUrl), sha256, sealedAt })), // 대표에게만 복호화
   }));
 
   return NextResponse.json({

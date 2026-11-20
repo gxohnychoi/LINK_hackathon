@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { sealEvidence } from './crypto';
 import { makeClueHashServer } from './clue-hash.server';
+import { encryptEvidence } from './evidence-crypto.server';
 import { recomputeGroups } from './groups';
 import type { Store, Case, ClueType, EvidenceKind, UserId } from './types';
 
@@ -43,7 +44,7 @@ async function seed(): Promise<Store> {
       const bytes = readFileSync(path.join(process.cwd(), 'public', 'demo', file));
       s.evidence.push({
         id: newId('e'), caseId: c.id, kind, fileName: file,
-        dataUrl: `data:image/svg+xml;base64,${bytes.toString('base64')}`,
+        dataUrl: encryptEvidence(`data:image/svg+xml;base64,${bytes.toString('base64')}`), // 저장 시 암호화
         sha256: (await sealEvidence(new Blob([new Uint8Array(bytes)]))).sha256,
         sealedAt: new Date(`${row.sentAt}T21:00:00+09:00`).toISOString(),
       });
